@@ -1,9 +1,12 @@
+/* TYPES */
+type MatchOutcome = 'win'|'loss'|'draw';
+
 /**
  * Convert matchOutcome parameters to corresponding number representation in elo rating system
  * @param matchOutcome 
  * @returns 1|0|0.5
  */
-function matchOutcomeCoeff(matchOutcome:'win'|'loss'|'draw'):1|0|0.5 {
+function matchOutcomeCoeff(matchOutcome:MatchOutcome):1|0|0.5 {
     switch(matchOutcome) {
         case 'win': return 1;
         case 'loss': return 0;
@@ -22,7 +25,7 @@ function matchOutcomeCoeff(matchOutcome:'win'|'loss'|'draw'):1|0|0.5 {
  * @param kFactor 
  * @returns ELO score points change to be applied as outcome of this match
  */
-export function matchScoreDiffResolution(firstPlayerEloScore:number, secondPlayerEloScore:number, matchOutcome:'win'|'loss'|'draw', kFactor: number = 32):number {
+export function matchScoreDiffResolution(firstPlayerEloScore:number, secondPlayerEloScore:number, matchOutcome:MatchOutcome, kFactor: number = 32):number {
     return (firstPlayerEloScore - secondPlayerEloScore) * matchOutcomeCoeff(matchOutcome) * kFactor;
 }
 
@@ -34,6 +37,6 @@ export function matchScoreDiffResolution(firstPlayerEloScore:number, secondPlaye
  * @param kFactor 
  * @returns new ELO score for first player based on match outcome
  */
-export function matchScoreResolution(firstPlayerEloScore:number, secondPlayerEloScore:number, matchOutcome:'win'|'loss'|'draw', kFactor: number = 32):number {
+export function matchScoreResolution(firstPlayerEloScore:number, secondPlayerEloScore:number, matchOutcome:MatchOutcome, kFactor: number = 32):number {
     return firstPlayerEloScore + matchScoreDiffResolution(firstPlayerEloScore, secondPlayerEloScore, matchOutcome, kFactor);
 }
