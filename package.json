@@ -1,0 +1,35 @@
+{
+    "name": "kai-elo-rating",
+    "description": "minimalist elo rating system implementation",
+    "version": "1.0.0",
+    "main": "dist/kai-elo-rating.cjs.js",
+    "module": "dist/kai-elo-rating.esm.js",
+    "browser": "dist/kai-elo-rating.umd.js",
+    "dependencies": {
+        
+    },
+    "keywords": [
+        "elo",
+        "rating",
+        "scoring",
+        "matchmaking"
+    ],
+    "devDependencies": {
+        "rollup": "^1.0.0",
+        "rollup-plugin-commonjs": "^9.2.0",
+        "rollup-plugin-node-resolve": "^4.0.0",
+        "rollup-plugin-typescript": "^1.0.0",
+        "typescript": "^3.2.2"
+    },
+    "scripts": {
+        "build": "rollup -c",
+        "dev": "rollup -c -w",
+        "test": "ts-node test/test.ts",
+        "pretest": "npm run build"
+    },
+    "files": [
+        "dist"
+    ],
+    "author": "David Maggi <musashi.miyamoto81@gamil.com>",
+    "license": "MIT"
+}
