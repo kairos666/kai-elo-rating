@@ -130,7 +130,7 @@ describe("elo-engine", () => {
             })}).toThrow();
         })
 
-        it('should have different but close outcome depending on successive monomatches or multi match evaluation', () => {
+        it('should have same outcome between: parrelel monomatches initial rank applied and rank offest summed, and multi match evaluation (almost same due to cumulative rounding)', () => {
             const multiMatchesDescriptor = { 
                 playerRank: 1613, 
                 kFactor:32,
@@ -143,11 +143,51 @@ describe("elo-engine", () => {
                 ]
             };
 
+            // play each match successively with rank same as initial for all matches
+            const sequenceOfMonoMatchesSameRank = multiMatchesDescriptor.matchesSetup.map(match => {
+                    return monoMatchCalculator({ 
+                        playerRank: multiMatchesDescriptor.playerRank, 
+                        opponentRank: match.opponentRank, 
+                        kFactor: multiMatchesDescriptor.kFactor, 
+                        matchOutcome: (match.matchOutcome as 0|0.5|1)
+                    });
+                }).reduce((acc, curr) => {
+                    const monomatchScoreDiff = (curr as any).newRanks.playerRank - (acc as any).initialPlayerRank;
+                    return {
+                        initialPlayerRank: (acc as any).initialPlayerRank,
+                        newPlayerRank: acc.newPlayerRank + monomatchScoreDiff,
+                        scoreDiff: monomatchScoreDiff
+                    }
+                }, {
+                    initialPlayerRank: multiMatchesDescriptor.playerRank,
+                    newPlayerRank: multiMatchesDescriptor.playerRank,
+                    scoreDiff: 0
+                });
+
+            const multResult = multiMatchCalculator((multiMatchesDescriptor as any));
+
+            expect(Math.abs(multResult.newPlayerRank - sequenceOfMonoMatchesSameRank.newPlayerRank)).toBeLessThan(2);
+        });
+
+        it('should have same outcome between: successive monomatches, and multi match evaluation (almost same due to cumulative rounding)', () => {
+            const multiMatchesDescriptor = { 
+                playerRank: 1613, 
+                kFactor:32,
+                matchesSetup: [
+                    { opponentRank: 1609, matchOutcome:1 },
+                    { opponentRank: 1477, matchOutcome:1 },
+                    { opponentRank: 1388, matchOutcome:0 },
+                    { opponentRank: 1586, matchOutcome:0.5 },
+                    { opponentRank: 1720, matchOutcome:0.5 }
+                ]
+            };
+
+            // play each match successively with rank updated at each match
             const sequenceOfMonoMatchesFinalRank = multiMatchesDescriptor.matchesSetup.reduce((acc, curr) => {
                 const monoMatchResult = monoMatchCalculator({ 
                     playerRank: acc.newPlayerRank, 
                     opponentRank: curr.opponentRank, 
-                    kFactor:multiMatchesDescriptor.kFactor, 
+                    kFactor: multiMatchesDescriptor.kFactor, 
                     matchOutcome: (curr.matchOutcome as 0|0.5|1)
                 });
 
@@ -161,8 +201,7 @@ describe("elo-engine", () => {
 
             const multResult = multiMatchCalculator((multiMatchesDescriptor as any));
 
-            expect(multResult.newPlayerRank).not.toBe(sequenceOfMonoMatchesFinalRank.newPlayerRank);
-            expect(Math.abs(multResult.newPlayerRank - sequenceOfMonoMatchesFinalRank.newPlayerRank)).toBeLessThan(5);
+            expect(Math.abs(multResult.newPlayerRank - sequenceOfMonoMatchesFinalRank.newPlayerRank)).toBeLessThan(2);
         })
     });
 });
