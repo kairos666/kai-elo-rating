@@ -51,9 +51,10 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
             { id: newPlayerId }
         );
 
+        // register player in players roster and return created player (clone)
         this._players.push(newPlayer);
 
-        return newPlayer;
+        return { ...newPlayer };
     }
 
     public deletePlayer(playerId:number) {
@@ -68,7 +69,7 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
             : null;
     }
 
-    public getAllPlayers() { return this._players.map(player => ({...player})) } // return new array of clones to protect players roster
+    public getAllPlayers() { return this._players.map(player => ({...player})); } // return new array of clones to protect players roster
 
     public getAllMatches() { }
     public getPlayerMatches(playerId:number) { }
