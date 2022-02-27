@@ -1,10 +1,5 @@
-/* TYPES */
-type PlayersEloRanks = {
-    playerRank: number,
-    opponentRank: number
-}
+import { MatchDescriptor, MatchResultDescriptor, MultiMatchDescriptor, MultiMatchResultDescriptor, PlayersEloRanks, ScoreDifferentialParams } from './types';
 
-/* EXPORTS */
 /**
  * A player's expected score is their probability of winning plus half their probability of drawing. Thus, an expected score of 0.75 could represent a 75% chance of winning, 25% chance of losing, and 0% chance of drawing. On the other extreme it could represent a 50% chance of winning, 0% chance of losing, and 50% chance of drawing.
  * @param playersEloRanks 
@@ -16,12 +11,6 @@ export function expectedScore(playersEloRanks:PlayersEloRanks):number {
     return 1 / (1 + Math.pow(10, exponent));
 }
 
-type ScoreDifferentialParams = {
-    actualScore: number,
-    expectedScore: number,
-    kFactor: number // maximum adjustment per game
-}
-
 /**
  * 
  * @param params object parameters: actualScore = match(es) score outcome, expectedScore = theoritical match(es) score outcome, kFactor - maximum score adjustment per game
@@ -31,19 +20,6 @@ export function scoreDifferential(params:ScoreDifferentialParams):number {
     const { actualScore, expectedScore, kFactor } = params;
 
     return kFactor * (actualScore - expectedScore);
-}
-
-type MatchDescriptor = {
-    playerRank: number,
-    opponentRank: number,
-    kFactor: number, // maximum adjustment per game
-    matchOutcome: 0|1|0.5 // match result: 1 = win for player, 0 = loss for player, 0.5 = draw 
-}
-
-type MatchResultDescriptor = {
-    initialRanks: PlayersEloRanks,
-    newRanks: PlayersEloRanks,
-    rankDiff: number // absolute differential (could be added or substracted depending on opponent or player)
 }
 
 /**
@@ -62,21 +38,6 @@ export function monoMatchCalculator(matchDescriptor:MatchDescriptor):MatchResult
         newRanks: { playerRank: playerRank + scoreDiff, opponentRank: opponentRank - scoreDiff },
         rankDiff: Math.abs(scoreDiff)
     }
-}
-
-type MultiMatchDescriptor = {
-    playerRank: number,
-    matchesSetup: Array<{
-        opponentRank: number,
-        matchOutcome: 0|1|0.5 // match result: 1 = win for player, 0 = loss for player, 0.5 = draw
-    }>
-    kFactor: number, // maximum adjustment per game 
-}
-
-type MultiMatchResultDescriptor = {
-    initialPlayerRank: number,
-    newPlayerRank: number,
-    scoreDiff: number
 }
 
 /**
