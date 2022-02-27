@@ -11,8 +11,10 @@ abstract class AEloRankingBoard implements IEloRankingBoard {
         this._kFactorRule = kFactorRule;
     }
 
-    abstract createPlayer(player:any, initialRank:number):void
+    abstract createPlayer(player?:any):Player
     abstract deletePlayer(playerId:number):void
+    abstract getPlayer(playerId:number):Player|null
+    abstract getAllPlayers():Player[]
     abstract getAllMatches():void
     abstract getPlayerMatches(playerId:number):void
     abstract getMatch(matchId:number):void
@@ -33,8 +35,41 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
         super(initialRank, kFactorRule);
     }
 
-    public createPlayer(player:any, initialRank:number) { }
-    public deletePlayer(playerId:number) { }
+    public createPlayer(player?:any):Player {
+        // generate ID for new player (overwrite eventual given id in parameters)
+        const newPlayerId:number = this._players.length;
+
+        // merge new player infos
+        const newPlayer = Object.assign({
+                creationDate: Date.now(),
+                lastPlayed: null,
+                initialRank: this.initialRank,
+                currentRank: this.initialRank,
+                matches: []
+            }, 
+            player, 
+            { id: newPlayerId }
+        );
+
+        this._players.push(newPlayer);
+
+        return newPlayer;
+    }
+
+    public deletePlayer(playerId:number) {
+        this._players = this._players.filter(player => (player.id !== playerId));
+    }
+
+    public getPlayer(playerId:number) { 
+        const foundPlayer:Player|undefined = this._players.find(player => (player.id === playerId));
+
+        return (foundPlayer)
+            ? { ...foundPlayer }
+            : null;
+    }
+
+    public getAllPlayers() { return this._players.map(player => ({...player})) } // return new array of clones to protect players roster
+
     public getAllMatches() { }
     public getPlayerMatches(playerId:number) { }
     public getMatch(matchId:number) { }

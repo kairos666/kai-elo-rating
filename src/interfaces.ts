@@ -1,4 +1,4 @@
-import { MatchOutcome } from "./types";
+import { MatchOutcome, Player } from "./types";
 
 export interface IEloRankingBoard extends IPlayerManager, IMatchManager {
     initialRank: number
@@ -6,8 +6,10 @@ export interface IEloRankingBoard extends IPlayerManager, IMatchManager {
 }
 
 export interface IPlayerManager {
-    createPlayer: (player:any, initialRank:number) => void
+    createPlayer: (player?:any) => Player
     deletePlayer: (playerId:number) => void
+    getPlayer: (playerId:number) => Player|null
+    getAllPlayers: () => Player[]
 }
 
 export interface IMatchManager {
