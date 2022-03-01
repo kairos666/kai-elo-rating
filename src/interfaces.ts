@@ -1,4 +1,4 @@
-import { MatchOutcome, Player } from "./types";
+import { Match, MatchOutcome, Player } from "./types";
 
 export interface IEloRankingBoard extends IPlayerManager, IMatchManager {
     initialRank: number
@@ -16,6 +16,6 @@ export interface IMatchManager {
     getAllMatches: () => void
     getPlayerMatches: (playerId:number) => void
     getMatch: (matchId:number) => void
-    setMatch: (playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome) => void
+    createMatch: (match:{ playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome }) => Match
     getMatchExpectancy: (playerAId:number, playerBId:number) => void
 }

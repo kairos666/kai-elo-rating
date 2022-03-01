@@ -60,5 +60,6 @@ export type Match = {
     playerBId: number,
     playerARank: number,
     playerBRank: number,
-    kFactor: number
+    kFactor: number,
+    matchOutcome: MatchOutcome
 }
