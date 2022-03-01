@@ -1,3 +1,4 @@
+import { expectedScore } from "../src/elo-engine";
 import { EloRankingBoardInMemory } from "../src/main";
 import { Player } from "../src/types";
 
@@ -201,6 +202,22 @@ describe("elo-board (in memory)", () => {
             expect(() => {
                 eloBoard.getPlayerMatches(1492);
             }).toThrow();
+        });
+    });
+
+    describe("getMatchExpectancy", () => {
+        it(`should return the correct expectancy for the virtual match`, () => {
+            const playerA = eloBoard.getPlayer(0);
+            const playerB = eloBoard.getPlayer(1);
+            const calculatedExpectancy = eloBoard.getMatchExpectancy((playerA as Player).id, (playerB as Player).id);
+            const reverseCalculatedExpectancy = eloBoard.getMatchExpectancy((playerB as Player).id, (playerA as Player).id);
+            const manuallyCalculatedExpectancy = expectedScore({ playerRank: (playerA as Player).currentRank, opponentRank: (playerB as Player).currentRank });
+            const reverseManuallyCalculatedExpectancy = expectedScore({ playerRank: (playerB as Player).currentRank, opponentRank: (playerA as Player).currentRank });
+
+            expect(calculatedExpectancy).toBeCloseTo(manuallyCalculatedExpectancy);
+            expect(reverseCalculatedExpectancy).toBeCloseTo(reverseManuallyCalculatedExpectancy);
+            expect(reverseCalculatedExpectancy).toBeCloseTo(1 - manuallyCalculatedExpectancy);
+            expect(calculatedExpectancy).toBeCloseTo(1 - reverseManuallyCalculatedExpectancy);
         });
     });
 });

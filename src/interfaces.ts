@@ -13,9 +13,9 @@ export interface IPlayerManager {
 }
 
 export interface IMatchManager {
-    getAllMatches: () => void
-    getPlayerMatches: (playerId:number) => void
-    getMatch: (matchId:number) => void
+    getAllMatches: () => Match[]
+    getPlayerMatches: (playerId:number) => Match[]
+    getMatch: (matchId:number) => Match|null
     createMatch: (match:{ playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome }) => Match
     getMatchExpectancy: (playerAId:number, playerBId:number) => void
 }
