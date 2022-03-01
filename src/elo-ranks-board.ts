@@ -1,4 +1,4 @@
-import { monoMatchCalculator } from "./elo-engine";
+import { expectedScore, monoMatchCalculator } from "./elo-engine";
 import { IEloRankingBoard } from "./interfaces";
 import { KFactorRule, Match, MatchOutcome, Player } from "./types";
 
@@ -16,11 +16,11 @@ abstract class AEloRankingBoard implements IEloRankingBoard {
     abstract deletePlayer(playerId:number):void
     abstract getPlayer(playerId:number):Player|null
     abstract getAllPlayers():Player[]
-    abstract getAllMatches():void
-    abstract getPlayerMatches(playerId:number):void
-    abstract getMatch(matchId:number):void
+    abstract getAllMatches():Match[]
+    abstract getPlayerMatches(playerId:number):Match[]
+    abstract getMatch(matchId:number):Match|null
     abstract createMatch(match:{ playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome }):Match
-    abstract getMatchExpectancy(playerAId:number, playerBId:number):void
+    abstract getMatchExpectancy(playerAId:number, playerBId:number):number
 
     /* GETTERS SETTERS */
     get initialRank():number { return this._initialRank; }
@@ -144,5 +144,14 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
         return { ...newMatch };
     }
 
-    public getMatchExpectancy(playerAId:number, playerBId:number) { }
+    public getMatchExpectancy(playerAId:number, playerBId:number) {
+        // get players
+        if(playerAId === playerBId) throw new Error(`EloRankingBoard/getMatchExpectancy - same player for both sides of the match: playerA #${ playerAId } = playerB #${ playerBId }`);
+        const playerA = this.getPlayer(playerAId);
+        const playerB = this.getPlayer(playerBId);
+        if(!playerA || !playerB) throw new Error(`EloRankingBoard/getMatchExpectancy - one or both players in a match can't be found: playerA #${ playerAId } & playerB #${ playerBId }`);
+
+        // expected score of A against opponent B
+        return expectedScore({ playerRank: playerA.currentRank, opponentRank: playerB.currentRank });
+    }
 }
