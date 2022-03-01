@@ -1,3 +1,4 @@
+import { monoMatchCalculator } from "./elo-engine";
 import { IEloRankingBoard } from "./interfaces";
 import { KFactorRule, Match, MatchOutcome, Player } from "./types";
 
@@ -18,7 +19,7 @@ abstract class AEloRankingBoard implements IEloRankingBoard {
     abstract getAllMatches():void
     abstract getPlayerMatches(playerId:number):void
     abstract getMatch(matchId:number):void
-    abstract setMatch(playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome):void
+    abstract createMatch(match:{ playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome }):Match
     abstract getMatchExpectancy(playerAId:number, playerBId:number):void
 
     /* GETTERS SETTERS */
@@ -31,10 +32,22 @@ abstract class AEloRankingBoard implements IEloRankingBoard {
 export class EloRankingBoard_InMemory extends AEloRankingBoard {
     private _players:Player[] = [];
     private _matches:Match[] = [];
+
     constructor(initialRank: number, kFactorRule: KFactorRule) {
         super(initialRank, kFactorRule);
     }
 
+    /* PRIVATE METHODS */
+    // same as public version but return object is not a clone (enables mutations for updates)
+    private _getPlayer(playerId:number) {
+        const foundPlayer:Player|undefined = this._players.find(player => (player.id === playerId));
+
+        return (foundPlayer)
+            ? foundPlayer
+            : null;
+    }
+
+    /* PUBLIC METHODS */
     public createPlayer(player?:any):Player {
         // generate ID for new player (overwrite eventual given id in parameters)
         const newPlayerId:number = this._players.length;
@@ -65,7 +78,7 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
         const foundPlayer:Player|undefined = this._players.find(player => (player.id === playerId));
 
         return (foundPlayer)
-            ? { ...foundPlayer }
+            ? { ...foundPlayer, matches: [...foundPlayer.matches] }
             : null;
     }
 
@@ -74,6 +87,45 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
     public getAllMatches() { }
     public getPlayerMatches(playerId:number) { }
     public getMatch(matchId:number) { }
-    public setMatch(playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome) { }
+
+    public createMatch(match:{ playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome }) {
+        const now = Date.now();
+        // generate ID for new match
+        const newMatchId:number = this._matches.length;
+
+        // get players
+        if(match.playerAId === match.playerBId) throw new Error(`EloRankingBoard/createMatch - same player for both sides of the match: playerA #${ match.playerAId } = playerB #${ match.playerBId }`);
+        const playerA = this._getPlayer(match.playerAId);
+        const playerB = this._getPlayer(match.playerBId);
+        if(!playerA || !playerB) throw new Error(`EloRankingBoard/createMatch - one or both players in a match can't be found: playerA #${ match.playerAId } & playerB #${ match.playerBId }`);
+
+        // merge new player infos
+        const newMatch = Object.assign({}, match, {
+            id: newMatchId,
+            creationDate: now,
+            resolutionDate: now,
+            playerARank: playerA?.currentRank,
+            playerBRank: playerB?.currentRank
+        });
+
+        // register match in matches history
+        this._matches.push(newMatch);
+
+        // update players ranks based on match outcome
+        const calculatedMatchOutcome = monoMatchCalculator({ 
+            playerRank: playerA?.currentRank, 
+            opponentRank: playerB?.currentRank, 
+            kFactor: match.kFactor, 
+            matchOutcome: match.matchOutcome
+        });
+        playerA.currentRank = calculatedMatchOutcome.newRanks.playerRank;
+        playerA.matches.push(newMatch.id);
+        playerB.currentRank = calculatedMatchOutcome.newRanks.opponentRank;
+        playerB.matches.push(newMatch.id);
+        playerA.lastPlayed = playerB.lastPlayed = newMatch.resolutionDate;
+
+        return { ...newMatch };
+    }
+
     public getMatchExpectancy(playerAId:number, playerBId:number) { }
 }
