@@ -1,9 +1,11 @@
 import { EloRankingBoardInMemory } from "../src/main";
+import { Player } from "../src/types";
 
 describe("elo-board (in memory)", () => {
     // /!\ shared board instance, the order of tests is important
     const eloBoard = new EloRankingBoardInMemory(1000, () => 32);
     const createPlayerSpy = jest.spyOn(eloBoard, 'createPlayer');
+    const createMatchSpy = jest.spyOn(eloBoard, 'createMatch');
 
     describe("createPlayer", () => {
         it(`should return newly created player (from scratch)`, () => {
@@ -147,6 +149,57 @@ describe("elo-board (in memory)", () => {
             }).toThrow();
             expect(() => {
                 eloBoard.createMatch((bothPlayerUnknownMatchParams as any));
+            }).toThrow();
+        });
+    });
+
+    describe("getAllMatches", () => {
+        it(`should return the full list of matches registered`, () => {
+            const matchesHistory = eloBoard.getAllMatches();
+
+            expect(matchesHistory).toBeInstanceOf(Array);
+            expect(matchesHistory.length).toBeGreaterThan(0);
+            expect(matchesHistory.length).toBe(createMatchSpy.mock.calls.length - 4); // match history size should match how many times createMatch has been called (minus throw cases)
+        });
+    });
+
+    describe("getMatch", () => {
+        it(`should return the correct match from the list`, () => {
+            const matchParams = { playerAId:0, playerBId:1, kFactor: 32, matchOutcome: 1 };
+            const newlyCreatedMatch = eloBoard.createMatch(matchParams as any);
+            const foundCreatedMatch = eloBoard.getMatch(newlyCreatedMatch.id);
+
+            expect(foundCreatedMatch).toEqual(newlyCreatedMatch); // is clone
+            expect(foundCreatedMatch).not.toBe(newlyCreatedMatch); // is not identity object (prevent match data tempering)
+            expect(foundCreatedMatch).not.toBeNull();
+        });
+
+        it(`should return null if match id do not exist`, () => {
+            const nonExistentMatch = eloBoard.getMatch(1492);
+
+            expect(nonExistentMatch).toBeNull();
+        });
+    });
+
+    describe("getPlayerMatches", () => {
+        it(`should return the correct matches from the players list`, () => {
+            const targetedPlayer = eloBoard.getPlayer(0);
+            const foundPlayerMatches = eloBoard.getPlayerMatches(0);
+
+            expect(foundPlayerMatches.map(match => match.id)).toEqual((targetedPlayer as Player).matches);
+        });
+
+        it(`should return the all matches where player is listed as player`, () => {
+            const targetPlayerId = 0;
+            const foundPlayerMatches = eloBoard.getPlayerMatches(targetPlayerId);
+            const selfFilteredMatchHistory = eloBoard.getAllMatches().filter(match => ((match.playerAId === targetPlayerId) || (match.playerBId === targetPlayerId)));
+
+            expect(foundPlayerMatches).toEqual(selfFilteredMatchHistory);
+        });
+
+        it(`should throw if player do non exist`, () => {
+            expect(() => {
+                eloBoard.getPlayerMatches(1492);
             }).toThrow();
         });
     });

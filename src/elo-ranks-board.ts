@@ -84,9 +84,26 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
 
     public getAllPlayers() { return this._players.map(player => ({...player})); } // return new array of clones to protect players roster
 
-    public getAllMatches() { }
-    public getPlayerMatches(playerId:number) { }
-    public getMatch(matchId:number) { }
+    public getAllMatches() { return this._matches.map(match => ({...match})); } // return new array of clones to protect match history
+
+    public getPlayerMatches(playerId:number) {
+        // first get player
+        const targetedPlayer = this.getPlayer(playerId);
+        if(!targetedPlayer) throw new Error(`EloRankingBoard/getPlayerMatches - can't find matches for player #${ playerId }, player do not exist`);
+
+        // find all related matches from history (send clones)
+        return this._matches
+            .filter(match => targetedPlayer?.matches.includes(match.id))
+            .map(match => ({ ...match }));     
+    }
+
+    public getMatch(matchId:number) {
+        const foundMatch:Match|undefined = this._matches.find(match => (match.id === matchId));
+
+        return (foundMatch)
+            ? { ...foundMatch }
+            : null;
+    }
 
     public createMatch(match:{ playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome }) {
         const now = Date.now();
