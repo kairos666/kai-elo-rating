@@ -14,34 +14,42 @@ export type ScoreDifferentialParams = {
 
 export type MatchDescriptor = {
     playerRank: number,
+    playerKFactor: number,
     opponentRank: number,
-    kFactor: number, // maximum adjustment per game
+    opponentKFactor: number,
     matchOutcome: MatchOutcome
 }
 
 export type MatchResultDescriptor = {
-    initialRanks: PlayersEloRanks,
-    newRanks: PlayersEloRanks,
-    rankDiff: number // absolute differential (could be added or substracted depending on opponent or player)
+    player: {
+        initialRank: number,
+        newRank: number,
+        rankDiff: number
+    },
+    opponent: {
+        initialRank: number,
+        newRank: number,
+        rankDiff: number
+    }
 }
 
 export type MultiMatchDescriptor = {
     playerRank: number,
+    playerKFactor: number, // maximum adjustment per game 
     matchesSetup: Array<{
         opponentRank: number,
         matchOutcome: MatchOutcome
     }>
-    kFactor: number, // maximum adjustment per game 
 }
 
 export type MultiMatchResultDescriptor = {
-    initialPlayerRank: number,
-    newPlayerRank: number,
-    scoreDiff: number
+    initialRank: number,
+    newRank: number,
+    rankDiff: number
 }
 
 /* TYPES - ELO board */
-export type KFactorRule = (playerAId:number, playerBId:number) => number;
+export type KFactorRule = (player:Player) => number;
 
 export type Player = {
     id: number,
@@ -58,8 +66,9 @@ export type Match = {
     resolutionDate: number, // timestamp
     playerAId: number,
     playerBId: number,
-    playerARank: number,
-    playerBRank: number,
-    kFactor: number,
+    playerARank: number, // initial player rank (before rank update is applied)
+    playerBRank: number, // initial player rank (before rank update is applied)
+    playerAKFactor: number,
+    playerBKFactor: number,
     matchOutcome: MatchOutcome
 }

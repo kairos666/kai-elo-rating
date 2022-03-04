@@ -12,6 +12,13 @@ describe("elo-engine", () => {
             expect(expectedScore({ playerRank: 2600, opponentRank: 2300 })).toBeCloseTo(0.85);
             expect(expectedScore({ playerRank: 2300, opponentRank: 2600 })).toBeCloseTo(0.15);
         });
+
+        it(`should return 1 when summing expectedScore A vs B & B vs A`, () => {
+            const AvsBScore = expectedScore({ playerRank: 1613, opponentRank: 1388 });
+            const BvsAScore = expectedScore({ playerRank: 1388, opponentRank: 1613 });
+
+            expect(AvsBScore + BvsAScore).toBeCloseTo(1);
+        });
     });
 
     describe("scoreDifferential", () => {
@@ -37,26 +44,108 @@ describe("elo-engine", () => {
     });
     
     describe("monoMatchCalculator", () => {
-        it(`should return the correct rank changes based on match outcome`, () => {
-            expect(monoMatchCalculator({ playerRank: 2600, opponentRank: 2300, kFactor:16, matchOutcome: 1 })).toEqual({
-                initialRanks: { playerRank: 2600, opponentRank: 2300 }, 
-                newRanks: { playerRank: 2602, opponentRank: 2298 }, 
-                rankDiff: 2
+        it(`should return the correct rank changes based on match outcome (fixed k factor for both players)`, () => {
+            expect(monoMatchCalculator({ playerRank: 2600, playerKFactor:16, opponentRank: 2300, opponentKFactor: 16, matchOutcome: 1 })).toEqual({
+                player: {
+                    initialRank: 2600,
+                    newRank: 2602,
+                    rankDiff: 2
+                },
+                opponent: {
+                    initialRank: 2300,
+                    newRank: 2298,
+                    rankDiff: -2
+                }
             });
-            expect(monoMatchCalculator({ playerRank: 2600, opponentRank: 2300, kFactor:16, matchOutcome: 0 })).toEqual({
-                initialRanks: { playerRank: 2600, opponentRank: 2300 }, 
-                newRanks: { playerRank: 2586, opponentRank: 2314 }, 
-                rankDiff: 14
+            expect(monoMatchCalculator({ playerRank: 2600, playerKFactor:16, opponentRank: 2300, opponentKFactor: 16, matchOutcome: 0 })).toEqual({
+                player: {
+                    initialRank: 2600,
+                    newRank: 2586,
+                    rankDiff: -14
+                },
+                opponent: {
+                    initialRank: 2300,
+                    newRank: 2314,
+                    rankDiff: 14
+                }
             });
-            expect(monoMatchCalculator({ playerRank: 2600, opponentRank: 2300, kFactor:16, matchOutcome: 0.5 })).toEqual({
-                initialRanks: { playerRank: 2600, opponentRank: 2300 }, 
-                newRanks: { playerRank: 2594, opponentRank: 2306 }, 
-                rankDiff: 6
+            expect(monoMatchCalculator({ playerRank: 2600, playerKFactor: 16, opponentRank: 2300, opponentKFactor: 16, matchOutcome: 0.5 })).toEqual({
+                player: {
+                    initialRank: 2600,
+                    newRank: 2594,
+                    rankDiff: -6
+                },
+                opponent: {
+                    initialRank: 2300,
+                    newRank: 2306,
+                    rankDiff: 6
+                }
             });
-            expect(monoMatchCalculator({ playerRank: 2000, opponentRank: 2000, kFactor:32, matchOutcome: 0.5 })).toEqual({
-                initialRanks: { playerRank: 2000, opponentRank: 2000 }, 
-                newRanks: { playerRank: 2000, opponentRank: 2000 }, 
-                rankDiff: 0
+            expect(monoMatchCalculator({ playerRank: 2000, playerKFactor: 32, opponentRank: 2000, opponentKFactor: 32, matchOutcome: 0.5 })).toEqual({
+                player: {
+                    initialRank: 2000,
+                    newRank: 2000,
+                    rankDiff: 0
+                },
+                opponent: {
+                    initialRank: 2000,
+                    newRank: 2000,
+                    rankDiff: 0
+                }
+            });
+        });
+
+        it(`should return the correct rank changes based on match outcome (different k factor for both players)`, () => {
+            expect(monoMatchCalculator({ playerRank: 2000, playerKFactor: 32, opponentRank: 2000, opponentKFactor: 16, matchOutcome: 0.5 })).toEqual({
+                player: {
+                    initialRank: 2000,
+                    newRank: 2000,
+                    rankDiff: 0
+                },
+                opponent: {
+                    initialRank: 2000,
+                    newRank: 2000,
+                    rankDiff: 0
+                }
+            });
+
+            expect(monoMatchCalculator({ playerRank: 2600, playerKFactor: 32, opponentRank: 2300, opponentKFactor: 16, matchOutcome: 0.5 })).toEqual({
+                player: {
+                    initialRank: 2600,
+                    newRank: 2589,
+                    rankDiff: -11
+                },
+                opponent: {
+                    initialRank: 2300,
+                    newRank: 2306,
+                    rankDiff: 6
+                }
+            });
+
+            expect(monoMatchCalculator({ playerRank: 2600, playerKFactor:32, opponentRank: 2300, opponentKFactor: 16, matchOutcome: 1 })).toEqual({
+                player: {
+                    initialRank: 2600,
+                    newRank: 2605,
+                    rankDiff: 5
+                },
+                opponent: {
+                    initialRank: 2300,
+                    newRank: 2298,
+                    rankDiff: -2
+                }
+            });
+
+            expect(monoMatchCalculator({ playerRank: 2600, playerKFactor:16, opponentRank: 2300, opponentKFactor: 32, matchOutcome: 1 })).toEqual({
+                player: {
+                    initialRank: 2600,
+                    newRank: 2602,
+                    rankDiff: 2
+                },
+                opponent: {
+                    initialRank: 2300,
+                    newRank: 2295,
+                    rankDiff: -5
+                }
             });
         });
     });
@@ -65,29 +154,29 @@ describe("elo-engine", () => {
         it(`should return the correct rank change based on multiple matches (order is not relevant)`, () => {
             expect(multiMatchCalculator({ 
                 playerRank: 1613, 
-                kFactor:32,
+                playerKFactor:32,
                 matchesSetup: [
                     { opponentRank: 1613, matchOutcome:0.5 }
                 ]
             })).toEqual({
-                initialPlayerRank: 1613,
-                newPlayerRank: 1613,
-                scoreDiff: 0
+                initialRank: 1613,
+                newRank: 1613,
+                rankDiff: 0
             });
             expect(multiMatchCalculator({ 
                 playerRank: 2600, 
-                kFactor:16,
+                playerKFactor:16,
                 matchesSetup: [
                     { opponentRank: 2300, matchOutcome:0 }
                 ]
             })).toEqual({
-                initialPlayerRank: 2600,
-                newPlayerRank: 2586,
-                scoreDiff: -14
+                initialRank: 2600,
+                newRank: 2586,
+                rankDiff: -14
             });
             expect(multiMatchCalculator({ 
                 playerRank: 1613, 
-                kFactor:32,
+                playerKFactor:32,
                 matchesSetup: [
                     { opponentRank: 1609, matchOutcome:0 },
                     { opponentRank: 1477, matchOutcome:0.5 },
@@ -96,13 +185,13 @@ describe("elo-engine", () => {
                     { opponentRank: 1720, matchOutcome:0 }
                 ]
             })).toEqual({
-                initialPlayerRank: 1613,
-                newPlayerRank: 1601,
-                scoreDiff: -12
+                initialRank: 1613,
+                newRank: 1601,
+                rankDiff: -12
             });
             expect(multiMatchCalculator({ 
                 playerRank: 1613, 
-                kFactor:32,
+                playerKFactor:32,
                 matchesSetup: [
                     { opponentRank: 1609, matchOutcome:1 },
                     { opponentRank: 1477, matchOutcome:1 },
@@ -111,16 +200,16 @@ describe("elo-engine", () => {
                     { opponentRank: 1720, matchOutcome:0.5 }
                 ]
             })).toEqual({
-                initialPlayerRank: 1613,
-                newPlayerRank: 1617,
-                scoreDiff: 4
+                initialRank: 1613,
+                newRank: 1617,
+                rankDiff: 4
             });
         });
 
         it('should throw an error if empty "matchesSetup" is provided', () => {
             expect(() => { multiMatchCalculator({ 
                 playerRank: 1613, 
-                kFactor:32,
+                playerKFactor:32,
                 matchesSetup: []
             })}).toThrow();
         })
@@ -128,7 +217,7 @@ describe("elo-engine", () => {
         it('should have same outcome between: parrelel monomatches initial rank applied and rank offest summed, and multi match evaluation (almost same due to cumulative rounding)', () => {
             const multiMatchesDescriptor = { 
                 playerRank: 1613, 
-                kFactor:32,
+                playerKFactor:32,
                 matchesSetup: [
                     { opponentRank: 1609, matchOutcome:1 },
                     { opponentRank: 1477, matchOutcome:1 },
@@ -142,32 +231,33 @@ describe("elo-engine", () => {
             const sequenceOfMonoMatchesSameRank = multiMatchesDescriptor.matchesSetup.map(match => {
                     return monoMatchCalculator({ 
                         playerRank: multiMatchesDescriptor.playerRank, 
+                        playerKFactor: multiMatchesDescriptor.playerKFactor, 
                         opponentRank: match.opponentRank, 
-                        kFactor: multiMatchesDescriptor.kFactor, 
+                        opponentKFactor: multiMatchesDescriptor.playerKFactor, // not really useful, use fixed k factor for test purposes
                         matchOutcome: (match.matchOutcome as 0|0.5|1)
                     });
                 }).reduce((acc, curr) => {
-                    const monomatchScoreDiff = (curr as any).newRanks.playerRank - (acc as any).initialPlayerRank;
+                    const monomatchScoreDiff = (curr as any).player.newRank - (acc as any).initialRank;
                     return {
-                        initialPlayerRank: (acc as any).initialPlayerRank,
-                        newPlayerRank: acc.newPlayerRank + monomatchScoreDiff,
-                        scoreDiff: monomatchScoreDiff
+                        initialRank: (acc as any).initialRank,
+                        newRank: acc.newRank + monomatchScoreDiff,
+                        rankDiff: monomatchScoreDiff
                     }
                 }, {
-                    initialPlayerRank: multiMatchesDescriptor.playerRank,
-                    newPlayerRank: multiMatchesDescriptor.playerRank,
-                    scoreDiff: 0
+                    initialRank: multiMatchesDescriptor.playerRank,
+                    newRank: multiMatchesDescriptor.playerRank,
+                    rankDiff: 0
                 });
 
             const multResult = multiMatchCalculator((multiMatchesDescriptor as any));
 
-            expect(Math.abs(multResult.newPlayerRank - sequenceOfMonoMatchesSameRank.newPlayerRank)).toBeLessThan(2);
+            expect(Math.abs(multResult.newRank - sequenceOfMonoMatchesSameRank.newRank)).toBeLessThan(2);
         });
 
         it('should have same outcome between: successive monomatches, and multi match evaluation (almost same due to cumulative rounding)', () => {
             const multiMatchesDescriptor = { 
                 playerRank: 1613, 
-                kFactor:32,
+                playerKFactor:32,
                 matchesSetup: [
                     { opponentRank: 1609, matchOutcome:1 },
                     { opponentRank: 1477, matchOutcome:1 },
@@ -180,23 +270,24 @@ describe("elo-engine", () => {
             // play each match successively with rank updated at each match
             const sequenceOfMonoMatchesFinalRank = multiMatchesDescriptor.matchesSetup.reduce((acc, curr) => {
                 const monoMatchResult = monoMatchCalculator({ 
-                    playerRank: acc.newPlayerRank, 
+                    playerRank: acc.newRank, 
+                    playerKFactor: multiMatchesDescriptor.playerKFactor,
                     opponentRank: curr.opponentRank, 
-                    kFactor: multiMatchesDescriptor.kFactor, 
+                    opponentKFactor: multiMatchesDescriptor.playerKFactor, // not really useful, use fixed k factor for test purposes
                     matchOutcome: (curr.matchOutcome as 0|0.5|1)
                 });
 
                 // update partial new rank and diff for next match evaluation or final result
-                return Object.assign({}, acc, { newPlayerRank: monoMatchResult.newRanks.playerRank, scoreDiff: monoMatchResult.newRanks.playerRank - multiMatchesDescriptor.playerRank })
+                return Object.assign({}, acc, { newRank: monoMatchResult.player.newRank, rankDiff: monoMatchResult.player.newRank - multiMatchesDescriptor.playerRank })
             }, {
-                initialPlayerRank: multiMatchesDescriptor.playerRank,
-                newPlayerRank: multiMatchesDescriptor.playerRank,
-                scoreDiff: 0
+                initialRank: multiMatchesDescriptor.playerRank,
+                newRank: multiMatchesDescriptor.playerRank,
+                rankDiff: 0
             });
 
             const multResult = multiMatchCalculator((multiMatchesDescriptor as any));
 
-            expect(Math.abs(multResult.newPlayerRank - sequenceOfMonoMatchesFinalRank.newPlayerRank)).toBeLessThan(2);
+            expect(Math.abs(multResult.newRank - sequenceOfMonoMatchesFinalRank.newRank)).toBeLessThan(2);
         })
     });
 });
