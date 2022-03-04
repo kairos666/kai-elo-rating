@@ -88,12 +88,13 @@ describe("elo-board (in memory)", () => {
 
     describe("createMatch", () => {
         it(`should return a valid match instance`, () => {
-            const matchParams = { playerAId:0, playerBId:1, kFactor: 32, matchOutcome: 1 };
+            const matchParams = { playerAId:0, playerBId:1, matchOutcome: 1 };
             const createdMatch = eloBoard.createMatch((matchParams as any));
 
             expect(createdMatch).toHaveProperty('playerAId', 0);
             expect(createdMatch).toHaveProperty('playerBId', 1);
-            expect(createdMatch).toHaveProperty('kFactor', 32);
+            expect(createdMatch).toHaveProperty('playerAKFactor', 32);
+            expect(createdMatch).toHaveProperty('playerBKFactor', 32);
             expect(createdMatch).toHaveProperty('matchOutcome', 1);
             expect(createdMatch).toHaveProperty('id');
             expect(createdMatch).toHaveProperty('creationDate');
@@ -107,7 +108,7 @@ describe("elo-board (in memory)", () => {
         });
 
         it(`should update players current ranks et played matches`, () => {
-            const matchParams = { playerAId:0, playerBId:1, kFactor: 32, matchOutcome: 1 };
+            const matchParams = { playerAId:0, playerBId:1, matchOutcome: 1 };
             const preMatchPlayerA = eloBoard.getPlayer(matchParams.playerAId);
             const preMatchPlayerB = eloBoard.getPlayer(matchParams.playerBId);
 
@@ -130,7 +131,7 @@ describe("elo-board (in memory)", () => {
         });
 
         it(`should throw if both players are identical`, () => {
-            const samePlayersMatchParams = { playerAId:1, playerBId:1, kFactor: 32, matchOutcome: 1 };
+            const samePlayersMatchParams = { playerAId:1, playerBId:1, matchOutcome: 1 };
 
             expect(() => {
                 eloBoard.createMatch((samePlayersMatchParams as any));
@@ -138,9 +139,9 @@ describe("elo-board (in memory)", () => {
         });
 
         it(`should throw if one or both players are non existent`, () => {
-            const playerAUnknownMatchParams = { playerAId:6500, playerBId:1, kFactor: 32, matchOutcome: 1 };
-            const playerBUnknownMatchParams = { playerAId:0, playerBId:6500, kFactor: 32, matchOutcome: 1 };
-            const bothPlayerUnknownMatchParams = { playerAId:6500, playerBId:6501, kFactor: 32, matchOutcome: 1 };
+            const playerAUnknownMatchParams = { playerAId:6500, playerBId:1, matchOutcome: 1 };
+            const playerBUnknownMatchParams = { playerAId:0, playerBId:6500, matchOutcome: 1 };
+            const bothPlayerUnknownMatchParams = { playerAId:6500, playerBId:6501, matchOutcome: 1 };
 
             expect(() => {
                 eloBoard.createMatch((playerAUnknownMatchParams as any));
@@ -166,7 +167,7 @@ describe("elo-board (in memory)", () => {
 
     describe("getMatch", () => {
         it(`should return the correct match from the list`, () => {
-            const matchParams = { playerAId:0, playerBId:1, kFactor: 32, matchOutcome: 1 };
+            const matchParams = { playerAId:0, playerBId:1, matchOutcome: 1 };
             const newlyCreatedMatch = eloBoard.createMatch(matchParams as any);
             const foundCreatedMatch = eloBoard.getMatch(newlyCreatedMatch.id);
 

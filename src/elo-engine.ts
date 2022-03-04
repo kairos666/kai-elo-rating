@@ -28,15 +28,25 @@ export function scoreDifferential(params:ScoreDifferentialParams):number {
  * @returns player and opponent change in ranks post match
  */
 export function monoMatchCalculator(matchDescriptor:MatchDescriptor):MatchResultDescriptor {
-    const { playerRank, opponentRank, kFactor, matchOutcome } = matchDescriptor;
+    const { playerRank, playerKFactor, opponentRank, opponentKFactor, matchOutcome } = matchDescriptor;
 
-    const expectedMatchScore = expectedScore({ playerRank, opponentRank });
-    const scoreDiff = Math.round(scoreDifferential({ actualScore: matchOutcome, expectedScore: expectedMatchScore, kFactor }));
+    const expectedPlayerMatchScore = expectedScore({ playerRank, opponentRank });
+    const playerScoreDiff = Math.round(scoreDifferential({ actualScore: matchOutcome, expectedScore: expectedPlayerMatchScore, kFactor: playerKFactor }));
+
+    const expectedOpponentMatchScore = expectedScore({ playerRank: opponentRank, opponentRank: playerRank });
+    const opponentScoreDiff = Math.round(scoreDifferential({ actualScore: 1 - matchOutcome, expectedScore: expectedOpponentMatchScore, kFactor: opponentKFactor }));
 
     return {
-        initialRanks: { playerRank, opponentRank },
-        newRanks: { playerRank: playerRank + scoreDiff, opponentRank: opponentRank - scoreDiff },
-        rankDiff: Math.abs(scoreDiff)
+        player: {
+            initialRank: playerRank,
+            newRank: playerRank + playerScoreDiff,
+            rankDiff: playerScoreDiff
+        },
+        opponent: {
+            initialRank: opponentRank,
+            newRank: opponentRank + opponentScoreDiff,
+            rankDiff: opponentScoreDiff
+        }
     }
 }
 
@@ -46,7 +56,7 @@ export function monoMatchCalculator(matchDescriptor:MatchDescriptor):MatchResult
  * @returns rank change details
  */
 export function multiMatchCalculator(matchDescriptors:MultiMatchDescriptor):MultiMatchResultDescriptor {
-    const { playerRank, kFactor, matchesSetup } = matchDescriptors;
+    const { playerRank, playerKFactor, matchesSetup } = matchDescriptors;
 
     // throw early if empty matches descriptors
     if(!Array.isArray(matchesSetup) || matchesSetup.length === 0) throw new Error('multiMatchCalculator - no valid matches provided in "matchesSetup" property');
@@ -58,11 +68,11 @@ export function multiMatchCalculator(matchDescriptors:MultiMatchDescriptor):Mult
     const actualScoresSum:number = matchesSetup.reduce((acc, curr) => acc + curr.matchOutcome, 0);
 
     // evaluate rank shift
-    const scoreDiff = Math.round(scoreDifferential({ actualScore: actualScoresSum, expectedScore: expectedScoresSum, kFactor }));
+    const rankDiff = Math.round(scoreDifferential({ actualScore: actualScoresSum, expectedScore: expectedScoresSum, kFactor: playerKFactor }));
 
     return {
-        initialPlayerRank: playerRank,
-        newPlayerRank: playerRank + scoreDiff,
-        scoreDiff
+        initialRank: playerRank,
+        newRank: playerRank + rankDiff,
+        rankDiff
     }
 }

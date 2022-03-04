@@ -19,12 +19,13 @@ abstract class AEloRankingBoard implements IEloRankingBoard {
     abstract getAllMatches():Match[]
     abstract getPlayerMatches(playerId:number):Match[]
     abstract getMatch(matchId:number):Match|null
-    abstract createMatch(match:{ playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome }):Match
+    abstract createMatch(match:{ playerAId:number, playerBId:number, matchOutcome:MatchOutcome }):Match
     abstract getMatchExpectancy(playerAId:number, playerBId:number):number
 
     /* GETTERS SETTERS */
     get initialRank():number { return this._initialRank; }
     set initialRank(newInitialRank: number) { this.initialRank = newInitialRank; }
+    get kFactorRule():KFactorRule { return this._kFactorRule; }
     set kFactorRule(newkFactorRule: KFactorRule) { this._kFactorRule = newkFactorRule; }
 }
 
@@ -105,7 +106,7 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
             : null;
     }
 
-    public createMatch(match:{ playerAId:number, playerBId:number, kFactor:number, matchOutcome:MatchOutcome }) {
+    public createMatch(match:{ playerAId:number, playerBId:number, matchOutcome:MatchOutcome }) {
         const now = Date.now();
         // generate ID for new match
         const newMatchId:number = this._matches.length;
@@ -116,13 +117,19 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
         const playerB = this._getPlayer(match.playerBId);
         if(!playerA || !playerB) throw new Error(`EloRankingBoard/createMatch - one or both players in a match can't be found: playerA #${ match.playerAId } & playerB #${ match.playerBId }`);
 
+        // evaluate players K factor
+        const playerAKFactor:number = this.kFactorRule(playerA);
+        const playerBKFactor:number = this.kFactorRule(playerB);
+
         // merge new player infos
         const newMatch = Object.assign({}, match, {
             id: newMatchId,
             creationDate: now,
             resolutionDate: now,
             playerARank: playerA?.currentRank,
-            playerBRank: playerB?.currentRank
+            playerBRank: playerB?.currentRank,
+            playerAKFactor,
+            playerBKFactor
         });
 
         // register match in matches history
@@ -130,14 +137,15 @@ export class EloRankingBoard_InMemory extends AEloRankingBoard {
 
         // update players ranks based on match outcome
         const calculatedMatchOutcome = monoMatchCalculator({ 
-            playerRank: playerA?.currentRank, 
+            playerRank: playerA?.currentRank,
+            playerKFactor: playerAKFactor,
             opponentRank: playerB?.currentRank, 
-            kFactor: match.kFactor, 
+            opponentKFactor: playerBKFactor, 
             matchOutcome: match.matchOutcome
         });
-        playerA.currentRank = calculatedMatchOutcome.newRanks.playerRank;
+        playerA.currentRank = calculatedMatchOutcome.player.newRank;
         playerA.matches.push(newMatch.id);
-        playerB.currentRank = calculatedMatchOutcome.newRanks.opponentRank;
+        playerB.currentRank = calculatedMatchOutcome.opponent.newRank;
         playerB.matches.push(newMatch.id);
         playerA.lastPlayed = playerB.lastPlayed = newMatch.resolutionDate;
 
