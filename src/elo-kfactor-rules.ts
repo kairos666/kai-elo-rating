@@ -48,5 +48,34 @@ export function fixedKFactorRuleBuilder(kFactorValue:number):KFactorRule {
  * @param kFactorStages 
  */
 export function adaptToPlayerRankKFactorRuleBuilder(kFactorStages:{ kFactorValue:number, range:string }[]):KFactorRule {
-    return () => 12; // TODO
+    // parse range descriptor for each stage
+    const formatedKFactorStages = kFactorStages.map(stage => ({
+        kFactorValue: stage.kFactorValue,
+        range: rangeDescriptorParser(stage.range)
+    }));
+
+    return (player) => {
+        // find matching stages
+        const matchingStage = formatedKFactorStages.filter(stage => {
+            const isMinBoundIncluded = stage.range[0].isIncluded;
+            const isMaxBoundIncluded = stage.range[1].isIncluded;
+            const minBound = stage.range[0].lowerBoundValue;
+            const maxBound = stage.range[1].upperBoundValue;
+
+            return (isMinBoundIncluded && isMaxBoundIncluded)
+                ? (minBound <= player.currentRank && player.currentRank <= maxBound)
+                : (!isMinBoundIncluded && isMaxBoundIncluded)
+                ? (minBound < player.currentRank && player.currentRank <= maxBound)
+                : (isMinBoundIncluded && !isMaxBoundIncluded)
+                ? (minBound <= player.currentRank && player.currentRank < maxBound)
+                : (minBound < player.currentRank && player.currentRank < maxBound)
+        });
+
+        // throw if no match found
+        if(matchingStage.length === 0) throw new Error(`no match found for provided stages: ${ kFactorStages } (player rank: ${ player.currentRank })`);
+        // throw if more than one match found
+        if(matchingStage.length > 1) throw new Error(`multiple matches found for provided stages: ${ kFactorStages } (player rank: ${ player.currentRank })`);
+
+        return matchingStage[0].kFactorValue;
+    }
 }
