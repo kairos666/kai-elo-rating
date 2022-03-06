@@ -24,9 +24,9 @@ abstract class AEloRankingBoard implements IEloRankingBoard {
 
     /* GETTERS SETTERS */
     get initialRank():number { return this._initialRank; }
-    set initialRank(newInitialRank: number) { this.initialRank = newInitialRank; }
+    set initialRank(newInitialRank: number) { this._initialRank = newInitialRank; } // only applies to players created after the update
     get kFactorRule():KFactorRule { return this._kFactorRule; }
-    set kFactorRule(newkFactorRule: KFactorRule) { this._kFactorRule = newkFactorRule; }
+    set kFactorRule(newkFactorRule: KFactorRule) { this._kFactorRule = newkFactorRule; } // only applies to matches created after the update
 }
 
 /* IN-MEMORY - ELO RANKING BOARD (no data persistence) */
