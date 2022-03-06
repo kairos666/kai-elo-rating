@@ -4,9 +4,31 @@ import { Player } from "../src/types";
 
 describe("elo-board (in memory)", () => {
     // /!\ shared board instance, the order of tests is important
-    const eloBoard = new EloRankingBoardInMemory(1000, () => 32);
+    const initialRank = 1000;
+    const kFactorRule = () => 32;
+    const eloBoard = new EloRankingBoardInMemory(initialRank, kFactorRule);
     const createPlayerSpy = jest.spyOn(eloBoard, 'createPlayer');
     const createMatchSpy = jest.spyOn(eloBoard, 'createMatch');
+
+    describe("GETTER/SETTERS", () => {
+        it(`should return correct getter property initialRank`, () => {
+            expect(eloBoard.initialRank).toBeCloseTo(initialRank);
+        });
+        it(`should return correct getter property kFactorRule`, () => {
+            expect(eloBoard.kFactorRule).toBe(kFactorRule);
+        });
+        it(`should update correct setter property initialRank`, () => {
+            const monotestEloBoard = new EloRankingBoardInMemory(1000, () => 32);
+            monotestEloBoard.initialRank = 1500;
+            expect(monotestEloBoard.initialRank).toBeCloseTo(1500);
+        });
+        it(`should update correct setter property kFactorRule`, () => {
+            const monotestKFactorRule = () => 666;
+            const monotestEloBoard = new EloRankingBoardInMemory(1000, () => 32);
+            monotestEloBoard.kFactorRule = monotestKFactorRule;
+            expect(monotestEloBoard.kFactorRule).toBe(monotestKFactorRule);
+        });
+    });
 
     describe("createPlayer", () => {
         it(`should return newly created player (from scratch)`, () => {
