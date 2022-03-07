@@ -12,7 +12,7 @@ export function expectedScore(playersEloRanks:PlayersEloRanks):number {
 }
 
 /**
- * 
+ * Evaluates the elo rank shift that happens based on players ranks, match outcome and K factor
  * @param params object parameters: actualScore = match(es) score outcome, expectedScore = theoritical match(es) score outcome, kFactor - maximum score adjustment per game
  * @returns score variations to be applied to player ranking
  */
@@ -23,7 +23,7 @@ export function scoreDifferential(params:ScoreDifferentialParams):number {
 }
 
 /**
- * evaluate player and opponent ELO rank change after match is decided
+ * Evaluate player and opponent ELO rank change after match is decided
  * @param matchDescriptor player and opponent match full descriptor
  * @returns player and opponent change in ranks post match
  */
