@@ -1,6 +1,6 @@
 {
     "name": "kai-elo-rating",
-    "description": "minimalist elo rating system implementation",
+    "description": "simple elo rating system implementation",
     "version": "1.0.0",
     "main": "dist/kai-elo-rating.cjs.js",
     "module": "dist/kai-elo-rating.esm.js",
