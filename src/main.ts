@@ -1,9 +1,9 @@
 import { expectedScore, monoMatchCalculator, multiMatchCalculator, scoreDifferential } from "./elo-engine";
 import { fixedKFactorRuleBuilder, adaptToPlayerRankKFactorRuleBuilder } from "./elo-kfactor-rules";
-import { EloRankingBoard_InMemory } from "./elo-ranks-board";
+import { EloRankingBoard as EloRankingBoard_InMemory } from "./elo-ranks-board-in-memory";
 
 // elo engine (core elo system)
-export default {
+export const EloEngine = {
     expectedScore: expectedScore,
     scoreDifferential: scoreDifferential,
     monoMatchCalculator: monoMatchCalculator,
