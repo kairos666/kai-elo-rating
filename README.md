@@ -1,7 +1,7 @@
 # kai-elo-rating
 simple elo rating system implementation.
 
-## elo-engine (default import)
+## elo-engine
 This is the core of the library. It consists of a typescript implementation of Arpad Elo ranking system. Use this if you want to roll with your own handling of the ranking board, player roster and matches ledger.
 
 The core propose the following helper functions:
